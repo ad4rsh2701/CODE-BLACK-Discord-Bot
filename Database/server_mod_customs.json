@@ -1,0 +1,26 @@
+{
+  "123456789012345678": {
+    "custom_ban_message": "Custom ban message for server 123456789012345678",
+    "custom_kick_message": "Custom kick message for server 123456789012345678",
+    "custom_timeout_message": "Custom timeout message for server 123456789012345678",
+    "custom_soft_ban_message": "Custom soft ban message for server 123456789012345678",
+    "custom_warn_message": "Custom warn message for server 123456789012345678",
+    "custom_ban_message_dms": "Custom ban message (DM) for server 123456789012345678",
+    "custom_kick_message_dms": "Custom kick message (DM) for server 123456789012345678",
+    "custom_timeout_message_dms": "Custom timeout message (DM) for server 123456789012345678",
+    "custom_soft_ban_message_dms": "Custom soft ban message (DM) for server 123456789012345678",
+    "custom_warn_message_dms": "Custom warn message (DM) for server 123456789012345678"
+  },
+  "1164979961841582233": {
+    "custom_ban_message": "None",
+    "custom_kick_message": "None",
+    "custom_timeout_message": "None",
+    "custom_soft_ban_message": "None",
+    "custom_warn_message": "None",
+    "custom_ban_message_dms": "None",
+    "custom_kick_message_dms": "None",
+    "custom_timeout_message_dms": "None",
+    "custom_soft_ban_message_dms": "None",
+    "custom_warn_message_dms": "None"
+  }
+}

@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 # database files (once is fine)
+Database/
 .json
 
 # C extensions

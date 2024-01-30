@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 
 # database files (once is fine)
-CODE-BLACK-Discord-Bot/Database/
+Database/*
 
 # C extensions
 *.so

@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# database files (once is fine)
+.json
+
 # C extensions
 *.so
 

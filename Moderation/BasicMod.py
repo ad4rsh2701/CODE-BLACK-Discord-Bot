@@ -43,7 +43,11 @@ class BasicMod(Extension):
                 return
 
             await ctx.guild.kick(user.id, reason=reason)
-            await ctx.send(f"{user.display_name} has been yeeted out from Outer Haven! Because {reason}")
+            server_name = ctx.guild.name
+            user_name = user.display_name
+            member_count = ctx.guild.member_count
+            author_name = ctx.author.display_name
+            await ctx.send(f"{user_name} has been yeeted out {server_name}! Because {reason}")
         
         except Exception as e:
             await self.error_handler(e, ctx)

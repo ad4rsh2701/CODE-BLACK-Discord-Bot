@@ -1,68 +1,135 @@
+# Python imports
 import logging
-import traceback
 import json
-from interactions import Extension, component_callback, Modal, ShortText, slash_command, InteractionContext, subcommand, ParagraphText, StringSelectMenu, StringSelectOption, ActionRow, Button, ButtonStyle, Embed, Color, component_callback, ComponentContext, listen
-from Resources.CustomEmojis import *
-from interactions.api.events import GuildJoin
-# server_id,custom_ban_message_dms,custom_kick_message_dms,custom_timeout_message_dms,custom_soft_ban_message_dms,custom_warn_message_dms
+from os import environ
 
-# server_id,custom_ban_message_dms,custom_kick_message_dms,custom_timeout_message_dms,custom_soft_ban_message_dms,custom_warn_message_dms
+# Third Party imports
+from dotenv import load_dotenv
+from interactions.api.events import GuildJoin
+from interactions import (
+    ActionRow, Button, ButtonStyle, Color, ComponentContext, Embed,
+    Extension, InteractionContext, Modal, ParagraphText, StringSelectMenu,
+    StringSelectOption, component_callback, listen, slash_command
+)
+
+# "stuff I made for the sake of modularity" imports (aka Local imports)
+from Resources.CustomEmojis import *
+
+
+# loading environment variables from .env (refer README.md)
+load_dotenv()
+PATH = environ.get("MOD_DATABASE_PATH")
+
+# stuff in database file (for my reference)
+#   server_id,custom_ban_message_dms,custom_kick_message_dms,custom_timeout_message_dms,custom_soft_ban_message_dms,custom_warn_message_dms
 
 
 class CustomMod(Extension):
+    """Commands: customize kick, customize ban, customize warn, customize timeout\n
+    Listeners: on_guild_join\n 
+    Handlers: error_handler"""
+
+
     def __init__(self, bot):
         self.set_extension_error(self.error_handler)
+        
+        # Variables
+        # These variables are solely present to make building embeds easier
+        self.custom_message = ""
+        self.dm_user = ""
+        self.custom_dm_user = ""
 
+        # Modals
+        self.kick_custom_modal = Modal(
+            ParagraphText(
+                label="Enter your kick message!",
+                custom_id="text_kick_custom",
+                value = "Code words:\n1. {server_name} : Name of the server\n"\
+                    "2. {user_name} : Name of user\n"\
+                    "3. {member_count} : Number of Server Members\n"\
+                    "4. {author_name} : Name of the user who used the command\n"\
+                        "All markdowns available in discord work.\n\n"\
+                            "e.g.**{user_name}** has been kicked from {server_name}! That leaves us with {member_count} peeps!",),
+            title="Customize Kick!",    
+            custom_id="kick_custom_model",
+        )
+
+
+    # For determining switch modes
+    # switch and sub_switch here implies check and cross emojis, think of it like an actual switch indicating whether a feature is enabled or not
+    def switch_mode(self, custom_message: str, dm_user: str, custom_dm_user: str):
+        """Set customization switches based on the values."""
+
+        self.custom_message = "Enable" if custom_message == "None" else "Disable"
+        switch = f"{disabled_check}{enabled_cross}" if self.custom_message == "Enable" else f"{enabled_check}{disabled_cross}"
+
+        if dm_user == "False":
+            self.dm_user = "Enable"  # letting the user know that they can enable this
+            sub_switch = f"{disabled_check}{disabled_cross}"
+        else:
+            self.dm_user = "Disable" # letting the user know that they can disable this
+            sub_switch = f"{disabled_check}{enabled_cross}"
+            self.custom_dm_user = "Enable" if custom_dm_user != "None" else "Disable"
+
+        return switch, sub_switch
+
+
+    # Handy extension level error handler
     async def error_handler(self, error: Exception, ctx: InteractionContext):
         logging.error(f"Error in CustomMod: {error}")
-        traceback.print_exc()
         await ctx.send("An error occurred while processing the command. Please try again.")
 
 
+    # Everytime the bot starts, it will check the database
     @listen(GuildJoin)
     async def on_guild_join(self, event: GuildJoin) -> None:
+        """Listens for servers the bot is active in after it's started."""
 
         server_id = str(event.guild.id)
-        json_file = 'CODE-BLACK-Discord-Bot/Database/server_mod_customs.json'
-
         try:
-            with open(json_file, 'r') as file:
+            # Open the database file with both the reading and writing powers
+            with open(PATH, 'r+') as file:
                 servers = json.load(file)
+                
+                if server_id not in servers:
+                    servers[server_id] = {
+                        'custom_ban_message': 'None',
+                        'custom_kick_message': 'None',
+                        'custom_timeout_message': 'None',
+                        'custom_soft_ban_message': 'None',
+                        'custom_warn_message': 'None',
+                        'custom_ban_message_dms': 'None',
+                        "dm_on_ban": "False",
+                        'custom_kick_message_dms': 'None',
+                        "dm_on_kick": "False",
+                        'custom_timeout_message_dms': 'None',
+                        'custom_soft_ban_message_dms': 'None',
+                        'custom_warn_message_dms': 'None'
+                    }
+
+                    # Go back to the beginning of the file before writing
+                    file.seek(0)
+
+                    try:
+                        json.dump(servers, file, indent=2)
+                    except Exception as error:
+                        logging.error(f"Error in CustomMod: {error}")
+                        await event.bot.send("An error occurred while processing the command. Please try again.")
+
         except FileNotFoundError:
-            logging.error("JSON File not found")
-
-        if server_id not in servers:
-            servers[server_id] = {
-                'custom_ban_message': 'None',
-                'custom_kick_message': 'None',
-                'custom_timeout_message': 'None',
-                'custom_soft_ban_message': 'None',
-                'custom_warn_message': 'None',
-                'custom_ban_message_dms': 'None',
-                "dm_on_ban": "False",
-                'custom_kick_message_dms': 'None',
-                "dm_on_kick": "False",
-                'custom_timeout_message_dms': 'None',
-                'custom_soft_ban_message_dms': 'None',
-                'custom_warn_message_dms': 'None',
-            }
-            with open(json_file, 'w') as file:
-                json.dump(servers, file, indent=2)
+            logging.error(f"JSON File not found {PATH}")
 
 
-
-
-# customise kick    
+# customise kick
     @slash_command(name = "customize",
                    description = "Customize various responses!",
                    sub_cmd_name = "kick",
                    sub_cmd_description = "Customize Kick Command!"
                    )
-    async def customize_kick(self, ctx: ComponentContext):
-        try:    
-            json_file = 'CODE-BLACK-Discord-Bot/Database/server_mod_customs.json'
+    async def customize_kick(self, ctx: ComponentContext) -> None:
+        try:
 
-            with open(json_file, 'r') as file:
+            with open(PATH, 'r') as file:
                 servers = json.load(file)
 
             server_id = str(ctx.guild_id)
@@ -70,92 +137,53 @@ class CustomMod(Extension):
             custom_kick_message = servers[server_id]["custom_kick_message"]
             dm_on_kick = servers[server_id]["dm_on_kick"]
             custom_kick_message_dms = servers[server_id]["custom_kick_message_dms"]
-
-            print(f"server_id: {server_id}")
-            print(f"custom_kick_message: {custom_kick_message}")
-            print(f"dm_on_kick: {dm_on_kick}")
-            print(f"custom_kick_message_dms: {custom_kick_message_dms}")
-
-            global kick_list_value
-            global dm_kick_list_value
-            global dm_kick_custom_list_value
             
-            if custom_kick_message == "None":
-                option_type = f"{disabled_check}{enabled_cross}"
-                kick_list_value = "Enable"
-                
-            else:
-                option_type = f"{enabled_check}{disabled_cross}"
-                kick_list_value = "Disable"
-            if dm_on_kick == "False":
-                option_type = f"{disabled_check}{enabled_cross}"
-                sub_option_type = f"{disabled_check}{disabled_cross}"   
-                dm_kick_list_value = "Enable"
-            
-            else:
-                option_type = f"{enabled_check}{disabled_cross}"
-                sub_option_type = f"{disabled_check}{enabled_cross}"
-                dm_kick_list_value = "Disable"
-                dm_kick_custom_list_value = "Enable"
-                
-                if custom_kick_message_dms != "None":
-                    sub_option_type = f"{enabled_check}{disabled_cross}"
-                    dm_kick_custom_list_value = "Disable"
-        
+            # Getting switch and sub_switch values
+            switch, sub_switch = self.switch_mode(custom_kick_message, dm_on_kick, custom_kick_message_dms)
+
+            # Building embed
             customize_kick_command_embed = Embed(
                 title = "Customize the Kick Command!",
                 description = f"Here are the current configurations for the \n`Kick Command` in **{ctx.guild.name}**\n\u200b",
                 color = Color.from_hex("#000000")
             )
             customize_kick_command_embed.add_field(
-                name = f"> Custom Kick Message           {option_type}",
+                name = f"> Custom Kick Message           {switch}",
                 value= "Have me send a message of your choice \nwhen a user is kicked!\n\u200b"
             )
             customize_kick_command_embed.add_field(
-                name = f"> DM User on Kick                     {option_type}",
+                name = f"> DM User on Kick                     {switch}",
                 value= "Have me send some Direct Message(DM)\nto a user when they are kicked!\n\u200b"
             )
             customize_kick_command_embed.add_field(
-                name = f"> Custom DM Kick Message   {sub_option_type}",
+                name = f"> Custom DM Kick Message   {sub_switch}",
                 value= "Have me send Direct Message(DM) of your choice\nto a user when they are kicked!"
             )
             customize_kick_command_embed.add_field(
                 name = "\u200b",
                 value ="Select the modifications you want to apply\nusing the drop down below."
             )
-            if dm_on_kick == "False":
-                options = [
-                    StringSelectOption(label=f"{kick_list_value} Custom Kick Message", value= "1"),
-                    StringSelectOption(label=f"{dm_kick_list_value} DM User on Kick", value= 4)
-                ]
-            else:
-                options = [
-                    StringSelectOption(label=f"{kick_list_value} Custom Kick Message", value= 1),
-                    StringSelectOption(label=f"{dm_kick_list_value} DM User on Kick", value= 2),
-                    StringSelectOption(label=f"{dm_kick_custom_list_value} Custom DM Kick Message", value= 3)
-                ]
+
+            # building select menu options
+            common_options = [
+                StringSelectOption(label=f"{self.custom_message} Custom Kick Message", value="1"),
+                StringSelectOption(label=f"{self.dm_user} DM User on Kick", value="4")
+            ]
+
+            if dm_on_kick != "False":
+                common_options.append(
+                    StringSelectOption(label=f"{self.custom_dm_user} Custom DM Kick Message", value="3")
+                )
+            options = common_options
             
+            # Building the select menu
             kick_customs_menu = StringSelectMenu(
                 *options,          
                 custom_id= 'kick_custom_list',
                 placeholder= 'Select a modification!',
                 max_values=1, min_values=1)
-            
-            global kick_custom_modal
-            kick_custom_modal = Modal(
-                ParagraphText(
-                    label="Enter your kick message!",
-                    custom_id="text_kick_custom",
-                    value = "Code words:\n1. {server_name} : Name of the server\n"\
-                        "2. {user_name} : Name of user\n"\
-                        "3. {member_count} : Number of Server Members\n"\
-                        "4. {author_name} : Name of the user who used the command\n"\
-                            "All markdowns available in discord work.\n\n"\
-                                "Example Text: Aaaand Yeetus Burgertus people! **{user_name}** has been kicked from {server_name}! That leaves us with {member_count} peeps!",),
-                title="Customize Kick!",    
-                custom_id="kick_custom_model",
-            )
 
+            # Sending the embed with the dynamic select menu
             await ctx.send(embeds=customize_kick_command_embed, components=kick_customs_menu, ephemeral= True)
         
         except Exception as e:
@@ -164,6 +192,5 @@ class CustomMod(Extension):
     @component_callback("kick_custom_list")
     async def kick_custom_list(self, ctx: ComponentContext):
         selected_option = ctx.values[0]
-        if selected_option == "1" and kick_list_value == "Enable":
-            await ctx.send_modal(modal = kick_custom_modal)
-            # TODO: Make an option for embed messages and stuff for other options
+        if selected_option == "1" and self.custom_message == "Enable":
+            await ctx.send_modal(modal = self.kick_custom_modal)

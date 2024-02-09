@@ -1,11 +1,23 @@
+# Python imports
 import logging
-from interactions import Extension, slash_command, slash_option, OptionType, InteractionContext, User, Permissions
+
+# Third Party imports
+from interactions import (
+    Extension, slash_command, slash_option, 
+    OptionType, InteractionContext, User, Permissions
+)
 
 
 class BasicMod(Extension):
+    """Commands: kick, ban, soft_ban, warn, timeout\n
+    Listeners: None\n
+    Handlers: error_handler"""
+
+
     def __init__(self, bot):
         self.set_extension_error(self.error_handler)
 
+    # Handy extension level error handler
     async def error_handler(self, error: Exception, ctx: InteractionContext):
         logging.error(f"Error in BasicMod: {error}")
         await ctx.send("An error occurred while processing the command. Please try again.")

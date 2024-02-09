@@ -42,16 +42,71 @@ class CustomMod(Extension):
         # Modals
         self.kick_custom_modal = Modal(
             ParagraphText(
-                label="Enter your kick message!",
-                custom_id="text_kick_custom",
-                value = "Code words:\n1. {server_name} : Name of the server\n"\
-                    "2. {user_name} : Name of user\n"\
-                    "3. {member_count} : Number of Server Members\n"\
-                    "4. {author_name} : Name of the user who used the command\n"\
-                        "All markdowns available in discord work.\n\n"\
-                            "e.g.**{user_name}** has been kicked from {server_name}! That leaves us with {member_count} peeps!",),
+                label="Special Words (Do not fill this)",
+                custom_id="special_words_text",
+                placeholder="1. {server_name}: Server\n2. {user_name}: User\n3. {member_count}: Members\n4. {author_name}: Author",
+                required = False
+            ),
+            ParagraphText(
+                label="Example (Do not fill this)",
+                custom_id="example_text",
+                placeholder="e.g.**{user_name}** has been kicked from {server_name}! That leaves us with {member_count} peeps!",
+                required=False
+            ),
+            ParagraphText(
+                label="Your Custom Message (FILL THIS)",
+                custom_id="custom_kick_text",
+                placeholder="All discord markdowns work!",
+                required=True
+            ),
             title="Customize Kick!",    
             custom_id="kick_custom_model",
+        )
+        
+        self.ban_custom_modal = Modal(
+            ParagraphText(
+                label="Special Words (Do not fill this)",
+                custom_id="special_words_text",
+                placeholder="1. {server_name}: Server\n2. {user_name}: User\n3. {member_count}: Members\n4. {author_name}: Author",
+                required = False
+            ),
+            ParagraphText(
+                label="Example (Do not fill this)",
+                custom_id="example_text",
+                placeholder="e.g.**{user_name}** has been banned from {server_name}! That leaves us with {member_count} peeps!",
+                required=False
+            ),
+            ParagraphText(
+                label="Your Custom Message (FILL THIS)",
+                custom_id="custom_ban_text",
+                placeholder="All discord markdowns work!",
+                required=True
+            ),
+            title="Customize Ban!",    
+            custom_id="ban_custom_model", 
+        )
+        
+        self.warn_custom_modal = Modal(
+            ParagraphText(
+                label="Special Words (Do not fill this)",
+                custom_id="special_words_text",
+                placeholder="1. {server_name}: Server\n2. {user_name}: User\n3. {author_name}: Author",
+                required = False
+            ),
+            ParagraphText(
+                label="Example (Do not fill this)",
+                custom_id="example_text",
+                placeholder="e.g.**{user_name}** has been warned {server_name}! By the courtasy of {author_name}",
+                required=False
+            ),
+            ParagraphText(
+                label="Your Custom Message (FILL THIS)",
+                custom_id="custom_ban_text",
+                placeholder="All discord markdowns work!",
+                required=True
+            ),
+            title="Customize Ban!",    
+            custom_id="ban_custom_model",             
         )
 
 

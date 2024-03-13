@@ -6,6 +6,10 @@ __pycache__/
 # database files (once is fine)
 Database/*
 
+# old big files
+/ModalBuilder.py
+Moderation/trashed.py
+
 # C extensions
 *.so
 

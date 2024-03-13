@@ -9,6 +9,10 @@ Database/*
 # C extensions
 *.so
 
+# old big files
+/ModalBuilder.py
+Moderation/CustomMod.py
+
 # Distribution / packaging
 .Python
 build/

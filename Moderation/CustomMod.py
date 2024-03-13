@@ -8,12 +8,13 @@ from dotenv import load_dotenv
 from interactions.api.events import GuildJoin
 from interactions import (
     ActionRow, Button, ButtonStyle, Color, ComponentContext, Embed,
-    Extension, InteractionContext, Modal, ParagraphText, StringSelectMenu,
+    Extension, InteractionContext, Modal, ModalContext, ParagraphText, StringSelectMenu,
     StringSelectOption, component_callback, listen, slash_command
 )
 
 # "stuff I made for the sake of modularity" imports (aka Local imports)
 from Resources.CustomEmojis import *
+from ModalBuilder import ModalBuilder
 
 
 # loading environment variables from .env (refer README.md)
@@ -44,7 +45,8 @@ class CustomMod(Extension):
             ParagraphText(
                 label="Special Words (Do not fill this)",
                 custom_id="special_words_text",
-                placeholder="1. {server_name}: Server\n2. {user_name}: User\n3. {member_count}: Members\n4. {author_name}: Author",
+                value="1. {server_name}: Use this variable for Server name\n2. {user_name}: For inserting the Username\n"\
+                    "3. {member_count}: This will dislapy total Members in your server\n4. {author_name}: Will display the name of moderator who kicked the user!",
                 required = False
             ),
             ParagraphText(
@@ -248,4 +250,89 @@ class CustomMod(Extension):
     async def kick_custom_list(self, ctx: ComponentContext):
         selected_option = ctx.values[0]
         if selected_option == "1" and self.custom_message == "Enable":
-            await ctx.send_modal(modal = self.kick_custom_modal)
+            embed_or_text = Embed(
+                title="Custom Embed or Text message?",
+                description= "Oh? So, you want this little feature of enabling custom messages for kick command?\n"\
+                    "Please click on the appropriate button for the type of message you would like to send!\n\n"\
+                        "Oh and here is some guide for Embed type and Text type messages.",
+                color=Color.from_hex("#000000")
+            )
+            embed_or_text.add_field(
+                name="Guide for Embed type messages",
+                value=" "
+            )
+            embed_or_text.add_field(
+                name="Guide for Text type Messages",
+                value=" "
+            )
+            option_button = ActionRow(
+                Button(
+                    label="Embed!",
+                    custom_id="they_went_for_embed",
+                    style=ButtonStyle.BLUE
+                ),
+                Button(
+                    label="Text!",
+                    custom_id="they_went_for_text",
+                    style=ButtonStyle.GREEN
+                )
+                
+            )
+            await ctx.send(embed=embed_or_text, components=option_button, ephemeral=True)
+    
+    @component_callback("they_went_for_embed")
+    async def Embed_1(self, ctx: ComponentContext):
+        Modal_for_text = ModalBuilder(
+            ModalTitle="Kick Custom Modal!",
+            ModalCustomID="kick_custom_modal"
+        )
+        
+        await ctx.send_modal(modal = Modal_for_text.CustomTextInfo(get_ephemeral=True))
+
+    @component_callback("they_went_for_text")
+    async def text(self, ctx:ComponentContext):
+        Modal_for_embed = ModalBuilder(
+            ModalTitle="Kick Embed Custom!",
+            ModalCustomID="somehting_123"
+        )
+        kick_embed_modal = Modal_for_embed.CustomEmbedInfo(
+            get_embed_title=True,
+            get_embed_description=True,
+            get_embed_ephemeral=True
+        )
+        await ctx.send_modal(modal=kick_embed_modal)
+
+        modal_ctx: ModalContext = await ctx.bot.wait_for_modal(kick_embed_modal)
+
+        embed_title = modal_ctx.responses["get_embed_title"]
+        embed_description = modal_ctx.responses["get_embed_description"]
+        embed_ephemeral = modal_ctx.responses["get_embed_ephemeral"]
+
+        VariableEmbed = Embed(
+            title=embed_title,
+            description=embed_description
+        )
+
+        if embed_ephemeral.lower() == "true":
+            embed_ephemeral = True
+
+        VariableButtons = ActionRow(
+            Button(
+                label="Add Field!",
+                custom_id="add_field",
+                style=ButtonStyle.GREEN
+            ),
+            Button(
+                label="Looks Good! Exit!",
+                custom_id="exit",
+                style=ButtonStyle.BLUE
+            ),
+            Button(
+                label="Nvm, restart!",
+                custom_id="restart",
+                style=ButtonStyle.RED
+            )
+        
+        )
+
+        await modal_ctx.send(embed=VariableEmbed,components=VariableButtons, ephemeral=embed_ephemeral)

@@ -1,6 +1,5 @@
 # Python imports
 import logging
-import datetime
 import asyncio
 # Third Party imports
 from interactions import (

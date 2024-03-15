@@ -5,11 +5,11 @@ import logging
 # Third Party imports
 from dotenv import load_dotenv 
 from interactions.api.events import Startup
-from interactions import Activity, ActivityType, Client, Intents, listen
+from interactions import Activity, ActivityType, Client, Intents, listen, slash_command, InteractionContext
 
 
 # Configuring logging cuz why not
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.ERROR)
 
 # IMP: Intents is set to "ALL" for development phase only.
 bot = Client(intents=Intents.ALL, send_command_tracebacks=False)
@@ -34,13 +34,17 @@ if not bot_token:
     logging.error("Bot token is missing. Please set the BOT_TOKEN environment variable.")
     exit(1)
 
+# Checking if the bot is online
+@slash_command(name='disaster', description="Check if I'm online!",dm_permission=False)
+async def disaster(ctx: InteractionContext):
+    await ctx.send('> Response speed: {0} ms'.format(round(bot.latency * 100, 2)))
+
 # Lists of Extensions(Modules essentially)
 extensions = [
     "Fun.Confessions",
     "Fun.XPSystem",
     "Moderation.AdvanceMod",
     "Moderation.BasicMod",
-    "Moderation.CustomMod",
     "Moderation.ModLog",
     "Utilities.ChannelUtils",
     "Utilities.ServerUtils",
